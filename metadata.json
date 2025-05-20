@@ -1,5 +1,0 @@
-{
-  "name": "Blackjack 21 Classic",
-  "description": "Play the classic casino game of Blackjack (21). Try to beat the dealer by getting your hand closer to 21 without going over. Features optional AI-powered dealer commentary.",
-  "requestFramePermissions": []
-}
