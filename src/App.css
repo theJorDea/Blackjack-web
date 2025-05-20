@@ -1,0 +1,82 @@
+.app-container {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px;
+  background-color: #282c34;
+  color: white;
+  min-height: 100vh;
+}
+
+.game-info p {
+  margin: 5px 0;
+}
+
+.status-message {
+  margin: 20px 0;
+  font-size: 1.1em;
+  min-height: 2em; /* To prevent layout jumps */
+}
+
+.hands-container {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}
+
+.hand {
+  border: 1px solid #61dafb;
+  padding: 10px;
+  min-width: 200px;
+  background-color: #3a3f47;
+  border-radius: 8px;
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 60px; /* Space for cards */
+}
+
+.card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 5px;
+  width: 40px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  background-color: white;
+  color: black;
+  border-radius: 5px;
+}
+
+.card.hidden {
+  background-color: #999;
+  color: #999;
+}
+
+
+.game-controls button, .app-container > button {
+  margin: 5px;
+  padding: 10px 15px;
+  font-size: 1em;
+  cursor: pointer;
+  border-radius: 5px;
+  border: none;
+  background-color: #61dafb;
+  color: #282c34;
+}
+
+.game-controls button:hover, .app-container > button:hover {
+  opacity: 0.8;
+}
+
+.game-controls input {
+  padding: 8px;
+  margin-right: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+} 
