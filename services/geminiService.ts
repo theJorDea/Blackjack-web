@@ -53,7 +53,7 @@ const getPromptForSituation = (situation: DealerCommentSituation, playerScore?: 
       prompt += `Player stands on ${playerScore}. My turn to shine.`;
       break;
     case "player_doubles_down":
-      prompt += `Doubling down on ${betAmount / 2}? Bold. Here's your card.`; // Bet amount would be doubled when this is called
+      prompt += `Doubling down on ${betAmount !== undefined && betAmount > 0 ? betAmount / 2 : 'that bet'}? Bold. Here's your card.`;
       break;
     case "dealer_turn_start":
       prompt += `Dealer's turn. My visible card gives me ${dealerScore}. You stood on ${playerScore}.`;
@@ -89,7 +89,7 @@ export async function fetchDealerComment(
     situation: DealerCommentSituation, 
     playerScore?: number, 
     dealerScore?: number,
-    betAmount?: number, // This should be the bet for the current hand (e.g., after doubling)
+    betAmount?: number, 
     playerChips?: number 
   ): Promise<string> {
   if (!ai) {
@@ -103,25 +103,55 @@ export async function fetchDealerComment(
       model: GEMINI_MODEL_TEXT,
       contents: promptContent,
       config: {
-        temperature: 0.75, // Slightly increased for more varied wit
+        temperature: 0.75, 
         topP: 0.9,
         topK: 40,
-        maxOutputTokens: 50, // Ensure brevity
+        maxOutputTokens: 50, 
       }
     });
     
-    let text = response.text.trim();
-    // Remove potential markdown quotes
-    if (text.startsWith('"') && text.endsWith('"')) {
-      text = text.substring(1, text.length - 1);
+    if (response && typeof response.text === 'string') {
+      let textContent = response.text;
+      let trimmedText = textContent.trim();
+      
+      if (trimmedText.startsWith('"') && trimmedText.endsWith('"')) {
+        trimmedText = trimmedText.substring(1, trimmedText.length - 1);
+      }
+      return trimmedText;
+    } else {
+      console.warn("Gemini API response did not have a valid .text string property. Response:", response);
+      
+      let errorMessage = "The dealer is unusually quiet.";
+      if (response) {
+          if (response.candidates && response.candidates.length > 0) {
+              const firstCandidate = response.candidates[0];
+              if (firstCandidate.finishReason && !['STOP', 'UNSPECIFIED', 'FINISH_REASON_UNSPECIFIED'].includes(firstCandidate.finishReason)) {
+                  errorMessage = `Dealer's thought process stopped: ${firstCandidate.finishReason}.`;
+              } else if (firstCandidate.safetyRatings && firstCandidate.safetyRatings.some(sr => sr.blocked)) {
+                  errorMessage = "Dealer's comment was blocked (safety).";
+              }
+          } else if ((response as any).promptFeedback) { 
+              const promptFeedback = (response as any).promptFeedback;
+              if (promptFeedback.blockReason) {
+                  errorMessage = `Dealer's comment was blocked (prompt: ${promptFeedback.blockReason}).`;
+              } else if (promptFeedback.safetyRatings && promptFeedback.safetyRatings.some((sr: any) => sr.blocked)) {
+                  errorMessage = "Dealer's comment was blocked (prompt safety).";
+              }
+          }
+      }
+      return errorMessage;
     }
-    return text;
   } catch (error) {
     console.error("Error fetching dealer comment from Gemini:", error);
-    if (error instanceof Error && error.message.includes("API key not valid")) {
-        return "Dealer's commentary unavailable (API Key issue).";
+    if (error instanceof Error) {
+        if (error.message.includes("API key not valid")) {
+            return "Dealer's commentary unavailable (API Key issue).";
+        }
+        // If the error message is the one we're trying to prevent, provide a generic message
+        if (error.message.toLowerCase().includes("cannot read properties of undefined") && error.message.toLowerCase().includes("trim")) {
+            return "Dealer had a momentary lapse of thought.";
+        }
     }
-    // More generic error for other cases
     return "The dealer is contemplating the meaning of life... or just lost connection.";
   }
 }
